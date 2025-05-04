@@ -1,0 +1,5 @@
+{
+    "blocked_users": ["root", "admin", "guest"],
+    "max_attempts": 3
+}
+

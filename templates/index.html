@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IDS Alert Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>🚨 Intrusion Detection Alerts</h1>
+    <ul>
+        {% for alert in alerts %}
+            <li>{{ alert }}</li>
+        {% else %}
+            <li>No suspicious activity detected.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
+
