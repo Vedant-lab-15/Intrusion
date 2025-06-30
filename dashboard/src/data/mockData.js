@@ -277,3 +277,13 @@ export const treeMapData = [
     ],
   },
 ];
+
+// Area chart data for security incident trends
+export const areaChartData = [
+  { name: 'Jan', attacks: 400, mitigated: 240, investigated: 320 },
+  { name: 'Feb', attacks: 300, mitigated: 198, investigated: 220 },
+  { name: 'Mar', attacks: 620, mitigated: 401, investigated: 500 },
+  { name: 'Apr', attacks: 380, mitigated: 300, investigated: 310 },
+  { name: 'May', attacks: 480, mitigated: 390, investigated: 450 },
+  { name: 'Jun', attacks: 580, mitigated: 390, investigated: 520 },
+];
