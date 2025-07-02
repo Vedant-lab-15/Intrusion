@@ -140,15 +140,25 @@ const Dashboard = ({ currentView = 'dashboard', alerts = [] }) => {
       {/* Charts - Third Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-dark-200 p-6 rounded-lg shadow-card-dark border border-gray-700">
-          <h2 className="text-lg font-medium text-white mb-4">Attack Correlation</h2>
+          <h2 className="text-lg font-medium text-white mb-4">Security Incident Trends</h2>
           <div className="h-80">
-            <BubbleChart data={bubbleChartData} />
+            <AreaChartComponent />
           </div>
         </div>
         <div className="bg-dark-200 p-6 rounded-lg shadow-card-dark border border-gray-700">
           <h2 className="text-lg font-medium text-white mb-4">Rule Effectiveness</h2>
           <div className="h-80">
             <TreeMapChart data={treeMapData} />
+          </div>
+        </div>
+      </div>
+      
+      {/* Fourth Row */}
+      <div className="grid grid-cols-1 gap-6">
+        <div className="bg-dark-200 p-6 rounded-lg shadow-card-dark border border-gray-700">
+          <h2 className="text-lg font-medium text-white mb-4">Attack Correlation</h2>
+          <div className="h-80">
+            <BubbleChart data={bubbleChartData} />
           </div>
         </div>
       </div>

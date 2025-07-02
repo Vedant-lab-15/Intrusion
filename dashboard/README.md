@@ -1,33 +1,75 @@
-# React + TypeScript + Vite + Recharts
+# Data Dashboard Project
 
-This is a data dashboard project based on React, TypeScript, Vite, and Recharts.
+This is a data dashboard project built with **React**, **TypeScript**, **Vite**, and **Recharts**. It provides a comprehensive interface for visualizing and analyzing security-related data through various interactive charts and components.
 
-Currently, two official plugins are available:
+## Technologies Used
 
-There are already some components in the xxx directory: `@/components/charts`.
+- React
+- TypeScript
+- Vite
+- Recharts (for charting)
+- Tailwind CSS (for styling)
 
-## Docs
+## Features
 
-Get started with Recharts by reading the [fundamentals page](https://recharts.org/en-US/api).
+- Interactive charts and visualizations using Recharts
+- Components for monitoring security alerts, login attempts, blocked IPs, system health, and more
+- Responsive and modern UI design with Tailwind CSS
+- Modular component structure for easy maintenance and extension
 
+## Project Structure
 
-
-## Commands
-
-**Install Dependencies**
-
-```shell
-pnpm i
+```
+workspace/dashboard/
+├── src/
+│   ├── components/           # React components including charts and UI elements
+│   ├── data/                 # Mock data and data management
+│   ├── App.jsx               # Main application component
+│   ├── main.jsx              # Entry point
+│   └── index.css             # Global styles
+├── public/                   # Static assets (if any)
+├── package.json              # Project dependencies and scripts
+├── vite.config.js            # Vite configuration
+├── tailwind.config.js        # Tailwind CSS configuration
+└── README.md                 # This file
 ```
 
-**Start Preview**
+## Installation
 
-```shell
+Make sure you have [pnpm](https://pnpm.io/) installed. Then run:
+
+```bash
+pnpm install
+```
+
+## Usage
+
+To start the development server and preview the dashboard locally:
+
+```bash
 pnpm run dev
 ```
 
-**To build**
+This will start the Vite development server and open the app in your default browser.
 
-```shell
-Pnpm run build
+## Build
+
+To build the project for production:
+
+```bash
+pnpm run build
 ```
+
+The build output will be in the `dist` directory.
+
+## Documentation
+
+- Get started with Recharts by reading the [fundamentals page](https://recharts.org/en-US/api).
+
+## Contributing
+
+Contributions are welcome! Please open issues or submit pull requests for improvements or bug fixes.
+
+## License
+
+Specify your project license here (e.g., MIT License).

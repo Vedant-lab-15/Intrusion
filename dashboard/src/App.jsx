@@ -2,7 +2,15 @@ import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
+import DataManagement from './components/DataManagement';
 import AlertNotification from './components/AlertNotification';
+import SecurityAlerts from './components/SecurityAlerts';
+import SecurityRules from './components/SecurityRules';
+import LoginAttempts from './components/LoginAttempts';
+import BlockedIPs from './components/BlockedIPs';
+import ThreatAnalysis from './components/ThreatAnalysis';
+import SystemHealth from './components/SystemHealth';
+import Settings from './components/Settings';
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -41,13 +49,39 @@ function App() {
     setCurrentView(view);
   };
 
+  // Render content based on current view
+  const renderContent = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return <Dashboard currentView={currentView} />;
+      case 'data':
+        return <DataManagement />;
+      case 'alerts':
+        return <SecurityAlerts />;
+      case 'rules':
+        return <SecurityRules />;
+      case 'login-attempts':
+        return <LoginAttempts />;
+      case 'blocked-ips':
+        return <BlockedIPs />;
+      case 'threats':
+        return <ThreatAnalysis />;
+      case 'system':
+        return <SystemHealth />;
+      case 'settings':
+        return <Settings />;
+      default:
+        return <Dashboard currentView={currentView} />;
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-dark-100 text-gray-100">
       <Header />
       <div className="flex flex-1">
         <Sidebar onViewChange={handleViewChange} activeView={currentView} />
         <main className="flex-1 p-6 overflow-auto">
-          <Dashboard currentView={currentView} />
+          {renderContent()}
         </main>
       </div>
       {showAlert && <AlertNotification alert={alertData} onClose={() => setShowAlert(false)} />}

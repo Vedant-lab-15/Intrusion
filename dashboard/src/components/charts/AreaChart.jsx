@@ -1,8 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { areaChartData } from '../../data/mockData';
+import { areaChartData as defaultAreaChartData } from '../../data/mockData';
 
 const AreaChartComponent = () => {
+  const [chartData, setChartData] = useState(defaultAreaChartData);
+  
+  // Listen for updates to mock data from the Data Management panel
+  useEffect(() => {
+    // Check if data exists in localStorage first
+    const storedAreaData = localStorage.getItem('areaData');
+    if (storedAreaData) {
+      setChartData(JSON.parse(storedAreaData));
+    }
+    
+    // Listen for updates from the Data Management panel
+    const handleDataUpdate = () => {
+      if (window.mockDataStore && window.mockDataStore.areaChartData) {
+        setChartData(window.mockDataStore.areaChartData);
+      } else {
+        // If the global data store is not available, check localStorage again
+        const updatedAreaData = localStorage.getItem('areaData');
+        if (updatedAreaData) {
+          setChartData(JSON.parse(updatedAreaData));
+        }
+      }
+    };
+    
+    // Listen for custom event from DataManagement component
+    window.addEventListener('mockDataUpdated', handleDataUpdate);
+    
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('mockDataUpdated', handleDataUpdate);
+    };
+  }, []);
+
   // Custom tooltip to display security incident details
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -24,7 +56,7 @@ const AreaChartComponent = () => {
     <div className="h-72">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
-          data={areaChartData}
+          data={chartData}
           margin={{
             top: 10,
             right: 30,
