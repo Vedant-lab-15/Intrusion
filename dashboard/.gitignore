@@ -22,3 +22,17 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# TypeScript build artifacts
+*.tsbuildinfo
+*.d.ts.map
+vite.config.d.ts
+vitest.config.d.ts
+vitest.config.js
+
+# Test coverage output
+coverage/
+
+# Environment — never commit real credentials
+.env.local
+.env.production

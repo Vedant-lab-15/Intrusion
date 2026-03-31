@@ -8,31 +8,20 @@ const AreaChartComponent = () => {
   // Listen for updates to mock data from the Data Management panel
   useEffect(() => {
     // Check if data exists in localStorage first
-    const storedAreaData = localStorage.getItem('areaData');
+    const storedAreaData = localStorage.getItem('ids_area_data');
     if (storedAreaData) {
-      setChartData(JSON.parse(storedAreaData));
+      try { setChartData(JSON.parse(storedAreaData)); } catch { /* ignore */ }
     }
     
-    // Listen for updates from the Data Management panel
     const handleDataUpdate = () => {
-      if (window.mockDataStore && window.mockDataStore.areaChartData) {
-        setChartData(window.mockDataStore.areaChartData);
-      } else {
-        // If the global data store is not available, check localStorage again
-        const updatedAreaData = localStorage.getItem('areaData');
-        if (updatedAreaData) {
-          setChartData(JSON.parse(updatedAreaData));
-        }
+      const updatedAreaData = localStorage.getItem('ids_area_data');
+      if (updatedAreaData) {
+        try { setChartData(JSON.parse(updatedAreaData)); } catch { /* ignore */ }
       }
     };
     
-    // Listen for custom event from DataManagement component
     window.addEventListener('mockDataUpdated', handleDataUpdate);
-    
-    // Clean up event listener
-    return () => {
-      window.removeEventListener('mockDataUpdated', handleDataUpdate);
-    };
+    return () => window.removeEventListener('mockDataUpdated', handleDataUpdate);
   }, []);
 
   // Custom tooltip to display security incident details

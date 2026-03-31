@@ -1,6 +1,8 @@
 import React from 'react';
+import { useAuth } from '../auth/AuthContext';
 
 const Sidebar = ({ onViewChange, activeView = 'dashboard' }) => {
+  const { session } = useAuth();
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
     { id: 'alerts', name: 'Security Alerts', icon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z' },
@@ -29,10 +31,9 @@ const Sidebar = ({ onViewChange, activeView = 'dashboard' }) => {
             </div>
             
             {menuItems.slice(0, 3).map((item) => (
-              <a
+              <button
                 key={item.id}
-                href="#"
-                className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
                   activeView === item.id
                     ? 'bg-primary-700/20 text-primary-500'
                     : 'text-gray-300 hover:bg-dark-100 hover:text-white'
@@ -45,16 +46,12 @@ const Sidebar = ({ onViewChange, activeView = 'dashboard' }) => {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d={item.icon}
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
                 {item.name}
-              </a>
+              </button>
             ))}
 
             <div className="px-3 py-2 mt-6">
@@ -64,10 +61,9 @@ const Sidebar = ({ onViewChange, activeView = 'dashboard' }) => {
             </div>
             
             {menuItems.slice(3, 6).map((item) => (
-              <a
+              <button
                 key={item.id}
-                href="#"
-                className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
                   activeView === item.id
                     ? 'bg-primary-700/20 text-primary-500'
                     : 'text-gray-300 hover:bg-dark-100 hover:text-white'
@@ -80,16 +76,12 @@ const Sidebar = ({ onViewChange, activeView = 'dashboard' }) => {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d={item.icon}
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
                 {item.name}
-              </a>
+              </button>
             ))}
             
             <div className="px-3 py-2 mt-6">
@@ -99,10 +91,9 @@ const Sidebar = ({ onViewChange, activeView = 'dashboard' }) => {
             </div>
             
             {menuItems.slice(6).map((item) => (
-              <a
+              <button
                 key={item.id}
-                href="#"
-                className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                className={`w-full flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
                   activeView === item.id
                     ? 'bg-primary-700/20 text-primary-500'
                     : 'text-gray-300 hover:bg-dark-100 hover:text-white'
@@ -115,16 +106,12 @@ const Sidebar = ({ onViewChange, activeView = 'dashboard' }) => {
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
+                  aria-hidden="true"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d={item.icon}
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
                 {item.name}
-              </a>
+              </button>
             ))}
           </div>
         </nav>
@@ -133,11 +120,11 @@ const Sidebar = ({ onViewChange, activeView = 'dashboard' }) => {
       <div className="border-t border-gray-700 p-4 mt-6">
         <div className="flex items-center">
           <div className="w-8 h-8 bg-primary-700 rounded-full flex items-center justify-center text-white font-bold mr-3">
-            A
+            {session?.displayName?.[0]?.toUpperCase() ?? 'U'}
           </div>
           <div>
-            <p className="text-sm font-medium text-white">Admin User</p>
-            <p className="text-xs text-gray-400">Security Analyst</p>
+            <p className="text-sm font-medium text-white">{session?.displayName ?? 'User'}</p>
+            <p className="text-xs text-gray-400 capitalize">{session?.role ?? ''}</p>
           </div>
         </div>
       </div>

@@ -1,82 +1,116 @@
 import React, { useState, useEffect } from 'react';
 import { areaChartData as defaultAreaChartData } from '../data/mockData';
 
+// Sanitize a string: strip tags, limit length
+function sanitizeText(value, maxLen = 32) {
+  return String(value)
+    .replace(/[<>"'`]/g, '')
+    .trim()
+    .slice(0, maxLen);
+}
+
+// Clamp numeric input to a safe range
+function sanitizeNumber(value, min = 0, max = 99999) {
+  const n = parseInt(value, 10);
+  if (isNaN(n)) return 0;
+  return Math.min(Math.max(n, min), max);
+}
+
+// Validate a single data point
+function validateDataPoint(dp) {
+  const errors = [];
+  if (!dp.name) errors.push('Period name is required.');
+  if (dp.attacks < 0) errors.push('Attacks must be ≥ 0.');
+  if (dp.mitigated < 0) errors.push('Mitigated must be ≥ 0.');
+  if (dp.investigated < 0) errors.push('Investigated must be ≥ 0.');
+  if (dp.mitigated > dp.attacks) errors.push('Mitigated cannot exceed Attacks.');
+  return errors;
+}
+
+const STORAGE_KEY = 'ids_area_data';
+const MAX_DATA_POINTS = 50;
+
+// Safe localStorage helpers
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    // Re-sanitize on load to guard against tampered storage
+    return parsed.slice(0, MAX_DATA_POINTS).map((d) => ({
+      name: sanitizeText(d.name ?? ''),
+      attacks: sanitizeNumber(d.attacks),
+      mitigated: sanitizeNumber(d.mitigated),
+      investigated: sanitizeNumber(d.investigated),
+    }));
+  } catch {
+    return null;
+  }
+}
+
+function saveToStorage(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // Storage quota exceeded or unavailable — fail silently
+  }
+}
+
 const DataManagement = () => {
-  const [areaChartData, setAreaChartData] = useState(defaultAreaChartData);
-  const [newDataPoint, setNewDataPoint] = useState({
-    name: "",
-    attacks: 0,
-    mitigated: 0,
-    investigated: 0
-  });
+  const [areaChartData, setAreaChartData] = useState(() => loadFromStorage() ?? defaultAreaChartData);
+  const [newDataPoint, setNewDataPoint] = useState({ name: '', attacks: 0, mitigated: 0, investigated: 0 });
+  const [validationErrors, setValidationErrors] = useState([]);
 
-  // Initialize from localStorage if exists
+  // Persist to storage and notify other components whenever data changes
   useEffect(() => {
-    const storedData = localStorage.getItem('areaData');
-    if (storedData) {
-      setAreaChartData(JSON.parse(storedData));
-    }
-  }, []);
-
-  // Update global data store and dispatch event when data changes
-  useEffect(() => {
-    // Create or update global data store
-    if (!window.mockDataStore) {
-      window.mockDataStore = {};
-    }
-    window.mockDataStore.areaChartData = areaChartData;
-    
-    // Save to localStorage as a backup
-    localStorage.setItem('areaData', JSON.stringify(areaChartData));
-    
-    // Dispatch custom event to notify components of data change
-    const event = new CustomEvent('mockDataUpdated');
-    window.dispatchEvent(event);
+    saveToStorage(areaChartData);
+    window.dispatchEvent(new CustomEvent('mockDataUpdated'));
   }, [areaChartData]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewDataPoint({
-      ...newDataPoint,
-      [name]: name === 'name' ? value : parseInt(value, 10) || 0
-    });
+    setNewDataPoint((prev) => ({
+      ...prev,
+      [name]: name === 'name' ? sanitizeText(value) : sanitizeNumber(value),
+    }));
   };
 
   const addDataPoint = () => {
-    if (!newDataPoint.name) {
-      alert('Please enter a name for the data point');
+    if (areaChartData.length >= MAX_DATA_POINTS) {
+      setValidationErrors([`Maximum of ${MAX_DATA_POINTS} data points allowed.`]);
       return;
     }
-
-    const updatedData = [...areaChartData, { ...newDataPoint }];
-    setAreaChartData(updatedData);
-    
-    // Reset form
-    setNewDataPoint({
-      name: "",
-      attacks: 0,
-      mitigated: 0,
-      investigated: 0
-    });
+    const errors = validateDataPoint(newDataPoint);
+    if (errors.length) {
+      setValidationErrors(errors);
+      return;
+    }
+    setValidationErrors([]);
+    setAreaChartData((prev) => [...prev, { ...newDataPoint }]);
+    setNewDataPoint({ name: '', attacks: 0, mitigated: 0, investigated: 0 });
   };
 
   const updateDataPoint = (index, field, value) => {
-    const newData = [...areaChartData];
-    newData[index] = { 
-      ...newData[index], 
-      [field]: field === 'name' ? value : parseInt(value, 10) || 0 
-    };
-    setAreaChartData(newData);
+    setAreaChartData((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: field === 'name' ? sanitizeText(value) : sanitizeNumber(value),
+      };
+      return updated;
+    });
   };
 
   const deleteDataPoint = (index) => {
-    const newData = areaChartData.filter((_, i) => i !== index);
-    setAreaChartData(newData);
+    setAreaChartData((prev) => prev.filter((_, i) => i !== index));
   };
 
   const resetToDefaults = () => {
-    if (window.confirm('Are you sure you want to reset to default data?')) {
+    if (window.confirm('Reset all data to defaults? This cannot be undone.')) {
+      localStorage.removeItem(STORAGE_KEY);
       setAreaChartData(defaultAreaChartData);
+      setValidationErrors([]);
     }
   };
 
@@ -84,7 +118,7 @@ const DataManagement = () => {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold text-white">Data Management</h1>
-        <button 
+        <button
           onClick={resetToDefaults}
           className="mt-2 md:mt-0 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm"
         >
@@ -94,7 +128,16 @@ const DataManagement = () => {
 
       <div className="bg-dark-200 p-6 rounded-lg shadow-card-dark border border-gray-700">
         <h2 className="text-lg font-semibold text-white mb-4">Security Incident Trends Data</h2>
-        
+
+        {/* Validation errors */}
+        {validationErrors.length > 0 && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-md" role="alert">
+            {validationErrors.map((err, i) => (
+              <p key={i} className="text-red-400 text-sm">{err}</p>
+            ))}
+          </div>
+        )}
+
         {/* Add new data point form */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6 bg-dark-100 p-4 rounded-lg">
           <div>
@@ -104,7 +147,8 @@ const DataManagement = () => {
               name="name"
               value={newDataPoint.name}
               onChange={handleInputChange}
-              placeholder="e.g. Jun 2023"
+              placeholder="e.g. Jul 2024"
+              maxLength={32}
               className="w-full bg-dark-300 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
@@ -115,6 +159,8 @@ const DataManagement = () => {
               name="attacks"
               value={newDataPoint.attacks}
               onChange={handleInputChange}
+              min={0}
+              max={99999}
               className="w-full bg-dark-300 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
@@ -125,6 +171,8 @@ const DataManagement = () => {
               name="mitigated"
               value={newDataPoint.mitigated}
               onChange={handleInputChange}
+              min={0}
+              max={99999}
               className="w-full bg-dark-300 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
@@ -135,13 +183,16 @@ const DataManagement = () => {
               name="investigated"
               value={newDataPoint.investigated}
               onChange={handleInputChange}
+              min={0}
+              max={99999}
               className="w-full bg-dark-300 border border-gray-700 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-1 focus:ring-primary-500"
             />
           </div>
           <div className="flex items-end">
             <button
               onClick={addDataPoint}
-              className="w-full bg-primary-600 hover:bg-primary-700 text-white rounded-md py-2 px-4"
+              disabled={areaChartData.length >= MAX_DATA_POINTS}
+              className="w-full bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-md py-2 px-4"
             >
               Add Data Point
             </button>
@@ -167,6 +218,7 @@ const DataManagement = () => {
                     <input
                       type="text"
                       value={dataPoint.name}
+                      maxLength={32}
                       onChange={(e) => updateDataPoint(index, 'name', e.target.value)}
                       className="bg-transparent border-b border-gray-700 px-2 py-1 text-white w-full focus:outline-none focus:border-primary-500"
                     />
@@ -175,6 +227,8 @@ const DataManagement = () => {
                     <input
                       type="number"
                       value={dataPoint.attacks}
+                      min={0}
+                      max={99999}
                       onChange={(e) => updateDataPoint(index, 'attacks', e.target.value)}
                       className="bg-transparent border-b border-gray-700 px-2 py-1 text-white w-full focus:outline-none focus:border-primary-500"
                     />
@@ -183,6 +237,8 @@ const DataManagement = () => {
                     <input
                       type="number"
                       value={dataPoint.mitigated}
+                      min={0}
+                      max={99999}
                       onChange={(e) => updateDataPoint(index, 'mitigated', e.target.value)}
                       className="bg-transparent border-b border-gray-700 px-2 py-1 text-white w-full focus:outline-none focus:border-primary-500"
                     />
@@ -191,6 +247,8 @@ const DataManagement = () => {
                     <input
                       type="number"
                       value={dataPoint.investigated}
+                      min={0}
+                      max={99999}
                       onChange={(e) => updateDataPoint(index, 'investigated', e.target.value)}
                       className="bg-transparent border-b border-gray-700 px-2 py-1 text-white w-full focus:outline-none focus:border-primary-500"
                     />
@@ -209,17 +267,9 @@ const DataManagement = () => {
           </table>
         </div>
 
-        <div className="mt-4 p-4 bg-blue-900/20 border border-blue-700 rounded-md">
-          <h3 className="text-blue-400 font-medium mb-2">How to use the Data Management panel</h3>
-          <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">
-            <li>Add new data points using the form at the top</li>
-            <li>Edit existing data points directly in the table</li>
-            <li>Delete individual data points with the Delete button</li>
-            <li>Reset to default data with the "Reset to Defaults" button</li>
-            <li>Changes are applied in real-time to all charts</li>
-            <li>Your changes are saved to the browser's storage and will persist between sessions</li>
-          </ul>
-        </div>
+        <p className="mt-3 text-xs text-gray-500">
+          {areaChartData.length}/{MAX_DATA_POINTS} data points. Changes persist in browser storage and update all charts in real-time.
+        </p>
       </div>
     </div>
   );

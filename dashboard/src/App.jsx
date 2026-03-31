@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useAuth } from './auth/AuthContext';
+import LoginPage from './auth/LoginPage';
+import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -12,81 +15,86 @@ import ThreatAnalysis from './components/ThreatAnalysis';
 import SystemHealth from './components/SystemHealth';
 import Settings from './components/Settings';
 
-function App() {
+// Predefined alert pool — no random IP generation
+const ALERT_POOL = [
+  { type: 'failed-login', severity: 'high', message: 'Multiple failed login attempts detected', source: '203.0.113.42' },
+  { type: 'blocked-user', severity: 'medium', message: 'User account temporarily blocked after threshold exceeded', source: '198.51.100.17' },
+  { type: 'excessive-attempts', severity: 'critical', message: 'Brute-force pattern detected — IP auto-blocked', source: '192.0.2.88' },
+  { type: 'failed-login', severity: 'low', message: 'Single failed login attempt from known network', source: '10.0.0.55' },
+  { type: 'excessive-attempts', severity: 'high', message: 'Credential stuffing attempt detected', source: '203.0.113.99' },
+];
+
+function AppShell() {
+  const { session, refreshSession } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   const [showAlert, setShowAlert] = useState(false);
   const [alertData, setAlertData] = useState(null);
-  
-  // Simulate random alerts
-  useEffect(() => {
-    const alertTypes = ['failed-login', 'blocked-user', 'excessive-attempts'];
-    const alertSeverity = ['low', 'medium', 'high', 'critical'];
-    
-    const alertInterval = setInterval(() => {
-      const randomAlert = {
-        id: Date.now(),
-        type: alertTypes[Math.floor(Math.random() * alertTypes.length)],
-        severity: alertSeverity[Math.floor(Math.random() * alertSeverity.length)],
-        message: `Security alert detected at ${new Date().toLocaleTimeString()}`,
-        timestamp: new Date(),
-        source: `192.168.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`,
-      };
-      
-      setAlertData(randomAlert);
-      setShowAlert(true);
-      
-      // Hide alert after 5 seconds
-      setTimeout(() => {
-        setShowAlert(false);
-      }, 5000);
-    }, 15000); // Generate a new alert every 15 seconds
-    
-    return () => clearInterval(alertInterval);
-  }, []);
+  const [alertIndex, setAlertIndex] = useState(0);
 
-  // Handle view changes from sidebar
+  // Refresh session on user activity
+  const handleActivity = useCallback(() => {
+    refreshSession();
+  }, [refreshSession]);
+
+  useEffect(() => {
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach((e) => window.addEventListener(e, handleActivity, { passive: true }));
+    return () => events.forEach((e) => window.removeEventListener(e, handleActivity));
+  }, [handleActivity]);
+
+  // Cycle through predefined alerts — no random IP generation
+  useEffect(() => {
+    const alertInterval = setInterval(() => {
+      const alert = ALERT_POOL[alertIndex % ALERT_POOL.length];
+      setAlertData({ ...alert, id: Date.now(), timestamp: new Date() });
+      setShowAlert(true);
+      setAlertIndex((i) => i + 1);
+
+      setTimeout(() => setShowAlert(false), 5000);
+    }, 15000);
+
+    return () => clearInterval(alertInterval);
+  }, [alertIndex]);
+
   const handleViewChange = (view) => {
     setCurrentView(view);
   };
 
-  // Render content based on current view
   const renderContent = () => {
     switch (currentView) {
-      case 'dashboard':
-        return <Dashboard currentView={currentView} />;
-      case 'data':
-        return <DataManagement />;
-      case 'alerts':
-        return <SecurityAlerts />;
-      case 'rules':
-        return <SecurityRules />;
-      case 'login-attempts':
-        return <LoginAttempts />;
-      case 'blocked-ips':
-        return <BlockedIPs />;
-      case 'threats':
-        return <ThreatAnalysis />;
-      case 'system':
-        return <SystemHealth />;
-      case 'settings':
-        return <Settings />;
-      default:
-        return <Dashboard currentView={currentView} />;
+      case 'dashboard': return <Dashboard currentView={currentView} />;
+      case 'data': return <DataManagement />;
+      case 'alerts': return <SecurityAlerts />;
+      case 'rules': return <SecurityRules />;
+      case 'login-attempts': return <LoginAttempts />;
+      case 'blocked-ips': return <BlockedIPs />;
+      case 'threats': return <ThreatAnalysis />;
+      case 'system': return <SystemHealth />;
+      case 'settings': return <Settings />;
+      default: return <Dashboard currentView={currentView} />;
     }
   };
 
+  if (!session) return <LoginPage />;
+
   return (
     <div className="flex flex-col min-h-screen bg-dark-100 text-gray-100">
-      <Header />
+      <Header onViewChange={handleViewChange} />
       <div className="flex flex-1">
         <Sidebar onViewChange={handleViewChange} activeView={currentView} />
         <main className="flex-1 p-6 overflow-auto">
-          {renderContent()}
+          <ErrorBoundary key={currentView}>
+            {renderContent()}
+          </ErrorBoundary>
         </main>
       </div>
       {showAlert && <AlertNotification alert={alertData} onClose={() => setShowAlert(false)} />}
     </div>
   );
+}
+
+function App() {
+  return <AppShell />;
 }
 
 export default App;

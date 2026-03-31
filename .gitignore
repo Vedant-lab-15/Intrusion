@@ -49,3 +49,18 @@ test-results/
 pnpm-lock.yaml
 *.pyc
 __pycache__
+
+# IDE / platform internals — never commit these
+.MGXEnv.json
+.MGXTools/
+.timeline.json
+.wiki.md
+
+# TypeScript build artifacts
+*.tsbuildinfo
+*.d.ts.map
+
+# Vite generated declaration files
+vite.config.d.ts
+vitest.config.d.ts
+vitest.config.js

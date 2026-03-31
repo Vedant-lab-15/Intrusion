@@ -56,7 +56,7 @@ const Dashboard = ({ currentView = 'dashboard', alerts = [] }) => {
       <div className="bg-dark-200 p-6 rounded-lg shadow-card-dark border border-gray-700">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Recent Security Alerts</h2>
-          <a href="#" className="text-primary-500 hover:text-primary-400 text-sm">View All</a>
+          <span className="text-primary-500 text-sm">Recent 5 shown</span>
         </div>
         <div className="overflow-hidden">
           <table className="min-w-full divide-y divide-gray-700">
